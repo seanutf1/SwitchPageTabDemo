@@ -9,5 +9,5 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = viewModel()
 ){
-    HomePagerPlan2()
+    HomePagerPlan1()
 }
