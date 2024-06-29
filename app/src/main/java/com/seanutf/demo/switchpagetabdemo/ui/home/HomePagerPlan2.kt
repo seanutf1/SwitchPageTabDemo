@@ -1,5 +1,6 @@
 package com.seanutf.demo.switchpagetabdemo.ui.home
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.layout.Box
@@ -23,6 +24,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 /**
  * https://github.com/Ovaltinezz/nested-horizontal-pager
  * */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomePagerPlan2() {
     val pagerState = rememberPagerState(pageCount = { 4 })
@@ -41,6 +43,7 @@ fun HomePagerPlan2() {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun SecondPager(modifier: Modifier, pagerState: PagerState) {
     Column(modifier = modifier) {
@@ -63,6 +66,7 @@ private fun SecondPager(modifier: Modifier, pagerState: PagerState) {
 
 private val NoOpNestedScrollConnection = object : NestedScrollConnection {}
 
+@OptIn(ExperimentalFoundationApi::class)
 private fun coordinatingPagerNestedScroll(
     outerPagerState: PagerState,
     innerScrollableState: ScrollableState

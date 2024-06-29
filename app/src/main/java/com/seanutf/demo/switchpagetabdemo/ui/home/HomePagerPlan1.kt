@@ -1,5 +1,6 @@
 package com.seanutf.demo.switchpagetabdemo.ui.home
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
@@ -20,6 +21,7 @@ import com.seanutf.demo.switchpagetabdemo.ui.utils.rememberDraggablePagerState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomePagerPlan1() {
     val topPagerState = rememberPagerState(pageCount = { 6 })
@@ -34,6 +36,7 @@ fun HomePagerPlan1() {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ChildPager(
     topPagerState: PagerState,

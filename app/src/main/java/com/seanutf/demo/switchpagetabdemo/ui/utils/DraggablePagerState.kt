@@ -13,6 +13,7 @@ import androidx.compose.runtime.setValue
 /**
  * https://juejin.cn/post/7288628985322733583
  * */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun rememberDraggablePagerState(
     levelState: PagerState,
@@ -23,11 +24,13 @@ fun rememberDraggablePagerState(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 class DraggablePagerState(
     levelState: PagerState,
     level2State: PagerState,
     private var draggableOffset: Int = 36
 ) {
+
     private var mLevelState by mutableStateOf(levelState)
     private var mLevel2State by mutableStateOf(level2State)
 
