@@ -67,13 +67,13 @@ class HomeViewModel : ViewModel() {
     }
 
     fun updateSelectIndex(tabIndex: Int) {
-        checkNeedRefreshTab(tabIndex)
+        updateSelectTab(tabIndex)
         setSelectPageAndTab()
         _topPageSelectIndex.value = currentPageIndex
         _childPageSelectIndex.value = getPageCurrSelectTabIndex(currentPageIndex)
     }
 
-    private fun checkNeedRefreshTab(tabIndex: Int): Boolean {
+    private fun updateSelectTab(tabIndex: Int): Boolean {
         return if (currentPageIndex == 0) {
             //recommend page
             if (getPageCurrSelectTabIndex(0) != tabIndex) {
@@ -101,7 +101,11 @@ class HomeViewModel : ViewModel() {
     }
 
     private fun updateCurrPageSelectTabIndex(tabIndex: Int) {
-        uiHomePageTabList[currentPageIndex].selectIndex = tabIndex
+        updateSpecificPageSelectTabIndex(currentPageIndex, tabIndex)
+    }
+
+    private fun updateSpecificPageSelectTabIndex(pageIndex: Int, tabIndex: Int) {
+        uiHomePageTabList[pageIndex].selectIndex = tabIndex
     }
 
     fun updateSelectTabUi(topPagerState: PagerState, childPagerState: PagerState) {
@@ -113,6 +117,23 @@ class HomeViewModel : ViewModel() {
 
     fun getCurrentPageData(currentPage: Int): UiTopNav {
         return uiHomePageTabList[currentPage]
+    }
+
+    fun onScrollToPage(pageIndex: Int) {
+        //val thisTimeSelectTabIndex = getPageCurrSelectTabIndex(pageIndex)
+        val lastTimePageIndex = currentPageIndex
+        //val lastTimeSelectTabIndex = getPageCurrSelectTabIndex(currentPageIndex)
+
+        if (pageIndex < lastTimePageIndex) {
+            val lastIndex = uiHomePageTabList[pageIndex].tags.lastIndex
+            updateSpecificPageSelectTabIndex(pageIndex, lastIndex)
+        } else {
+            updateSpecificPageSelectTabIndex(pageIndex, 0)
+        }
+        currentPageIndex = pageIndex
+        setSelectPageAndTab()
+        _topPageSelectIndex.value = currentPageIndex
+        _childPageSelectIndex.value = getPageCurrSelectTabIndex(currentPageIndex)
     }
 }
 

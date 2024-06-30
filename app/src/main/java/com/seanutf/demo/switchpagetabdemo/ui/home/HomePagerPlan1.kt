@@ -60,7 +60,7 @@ fun ChildPager(
                     }
                 },
                 orientation = Orientation.Horizontal,
-                enabled = (draggableState.draggableEnabled())
+                enabled = (draggableState.draggableEnabled()),
             ),
     ) { _ ->
         Box(
@@ -69,7 +69,7 @@ fun ChildPager(
             contentAlignment = Alignment.Center
         ) {
             val currNavData = viewModel.getCurrentPageData(topPagerState.currentPage)
-            Text(text = "当前页面：外部Tab:位置${topPagerState.currentPage},名称${currNavData.title}, 内部:位置${childPagerState.currentPage}, 名称${currNavData.tags[childPagerState.currentPage].tag_name}")
+            Text(text = "当前页面：\n外部:位置${topPagerState.currentPage},名称${currNavData.title}, \n内部:位置${childPagerState.currentPage}, 名称${currNavData.tags[childPagerState.currentPage].tag_name}")
         }
     }
 }
