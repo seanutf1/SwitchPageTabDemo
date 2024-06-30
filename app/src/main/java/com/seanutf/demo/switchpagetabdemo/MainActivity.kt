@@ -23,7 +23,7 @@ class MainActivity : ComponentActivity() {
         val inputStream = resources.openRawResource(R.raw.home_config)
         val jsonStr = readTextFile(inputStream)
         val config = Gson().fromJson(jsonStr, HomeConfig::class.java)
-        HomeDataUseCase.homeConfig = config
+        HomeDataUseCase.originalHomeConfig = config
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

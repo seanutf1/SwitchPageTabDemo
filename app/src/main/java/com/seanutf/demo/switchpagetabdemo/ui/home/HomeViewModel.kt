@@ -1,48 +1,129 @@
 package com.seanutf.demo.switchpagetabdemo.ui.home
 
+import androidx.compose.foundation.pager.PagerState
 import androidx.lifecycle.ViewModel
-import com.seanutf.demo.switchpagetabdemo.data.HomeDataUseCase
+import androidx.lifecycle.viewModelScope
+import com.seanutf.demo.switchpagetabdemo.data.HomeDataUseCase.originalHomeConfig
+import com.seanutf.demo.switchpagetabdemo.data.Tag
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
-class HomeViewModel: ViewModel() {
+class HomeViewModel : ViewModel() {
 
+    //current shou page: default: recommend
+    private var currentPageIndex = 0
+
+    //for recommend page's and other page's tabs size
     private val _tabList = MutableStateFlow(emptyList<UiTabList>())
     val tabList: StateFlow<List<UiTabList>> = _tabList
 
-    private var currentPageIndex = 0
-    private var currentTabIndex = 0
+    //for recommend page's and other page's pages size
+    private val _topNavList = MutableStateFlow(emptyList<UiTopNav>())
+    val topNavList: StateFlow<List<UiTopNav>> = _topNavList
 
-    fun setSelectPageAndTab() {
+    //for home page's select child page
+    private val _topPageSelectIndex = MutableStateFlow(currentPageIndex)
+    val topPageSelectIndex: StateFlow<Int> = _topPageSelectIndex
+
+    //for recommend page's and other page's select child page
+    private val _childPageSelectIndex = MutableStateFlow(0)
+    val childPageSelectIndex: StateFlow<Int> = _childPageSelectIndex
+
+    private lateinit var uiHomePageTabList: List<UiTopNav>
+
+    init {
+        transform()
+        setSelectPageAndTab()
+    }
+
+    private fun transform() {
+        uiHomePageTabList = originalHomeConfig.MainPage.TopNavs.map {
+            UiTopNav(
+                title = it.title,
+                nav = it.nav,
+                tags = it.tags
+            )
+        }
+        _topNavList.value = uiHomePageTabList
+    }
+
+    private fun setSelectPageAndTab() {
         if (currentPageIndex == 0) {
             val firstPageTabList =
-                HomeDataUseCase.homeConfig.MainPage.TopNavs.mapIndexed{ index, nav ->
-                    val select = index == currentTabIndex
+                uiHomePageTabList.mapIndexed { index, nav ->
+                    val select = index == 0
                     UiTabList(nav.title, select)
                 }
             _tabList.value = firstPageTabList
         } else {
             val otherPageTabList =
-                HomeDataUseCase.homeConfig.MainPage.TopNavs[currentPageIndex].tags.mapIndexed{ index, tag ->
-                    val select = index == currentTabIndex
+                uiHomePageTabList[currentPageIndex].tags.mapIndexed { index, tag ->
+                    val select = index == getPageCurrSelectTabIndex(currentPageIndex)
                     UiTabList(tag.tag_name, select)
                 }
             _tabList.value = otherPageTabList
         }
     }
 
-    fun updateSelectIndex(index: Int) {
-        if (currentPageIndex == 0) {
-            currentPageIndex = index
-            currentTabIndex = 0
-        } else {
-            currentTabIndex = index
-        }
+    fun updateSelectIndex(tabIndex: Int) {
+        checkNeedRefreshTab(tabIndex)
         setSelectPageAndTab()
+        _topPageSelectIndex.value = currentPageIndex
+        _childPageSelectIndex.value = getPageCurrSelectTabIndex(currentPageIndex)
+    }
+
+    private fun checkNeedRefreshTab(tabIndex: Int): Boolean {
+        return if (currentPageIndex == 0) {
+            //recommend page
+            if (getPageCurrSelectTabIndex(0) != tabIndex) {
+                //update page index
+                currentPageIndex = tabIndex
+                //reset tab index to zero
+                updateCurrPageSelectTabIndex(0)
+                true
+            } else {
+                false
+            }
+        } else {
+            //other page
+            updateCurrPageSelectTabIndex(tabIndex)
+            false
+        }
+    }
+
+    fun getChildPagerSizeOfTopTab(currTopTabIndex: Int): Int {
+        return uiHomePageTabList[currTopTabIndex].tags.size
+    }
+
+    private fun getPageCurrSelectTabIndex(pageIndex: Int): Int {
+        return uiHomePageTabList[pageIndex].selectIndex
+    }
+
+    private fun updateCurrPageSelectTabIndex(tabIndex: Int) {
+        uiHomePageTabList[currentPageIndex].selectIndex = tabIndex
+    }
+
+    fun updateSelectTabUi(topPagerState: PagerState, childPagerState: PagerState) {
+        viewModelScope.launch {
+            topPagerState.scrollToPage(currentPageIndex)
+            childPagerState.scrollToPage(getPageCurrSelectTabIndex(currentPageIndex))
+        }
+    }
+
+    fun getCurrentPageData(currentPage: Int): UiTopNav {
+        return uiHomePageTabList[currentPage]
     }
 }
 
 data class UiTabList(
     val title: String,
     val isSelect: Boolean = false,
+)
+
+data class UiTopNav(
+    val title: String,
+    val nav: String,
+    val tags: List<Tag>,
+    var selectIndex: Int = 0
 )

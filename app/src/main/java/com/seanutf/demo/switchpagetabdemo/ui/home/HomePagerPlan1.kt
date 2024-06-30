@@ -10,10 +10,8 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -23,16 +21,19 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun HomePagerPlan1() {
-    val topPagerState = rememberPagerState(pageCount = { 6 })
-    val scope = rememberCoroutineScope()
+fun HomePagerPlan1(
+    viewModel: HomeViewModel,
+    topPagerState: PagerState,
+    childPagerState: PagerState,
+    scope: CoroutineScope,
+) {
     HorizontalPager(
         state = topPagerState,
         modifier = Modifier
             .background(color = Color.Blue)
             .fillMaxHeight(),
     ) { _ ->
-        ChildPager(topPagerState, scope)
+        ChildPager(topPagerState, childPagerState, scope, viewModel)
     }
 }
 
@@ -40,9 +41,10 @@ fun HomePagerPlan1() {
 @Composable
 fun ChildPager(
     topPagerState: PagerState,
+    childPagerState: PagerState,
     scope: CoroutineScope,
+    viewModel: HomeViewModel,
 ){
-    val childPagerState = rememberPagerState(pageCount = { 6 })
     val draggableState = rememberDraggablePagerState(topPagerState, childPagerState)
     draggableState.initUserScrollEnableType()
     HorizontalPager(
@@ -66,7 +68,8 @@ fun ChildPager(
                 .fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Text(text = "页面：：= 外部${topPagerState.currentPage}, 内部:${childPagerState.currentPage}")
+            val currNavData = viewModel.getCurrentPageData(topPagerState.currentPage)
+            Text(text = "当前页面：外部Tab:位置${topPagerState.currentPage},名称${currNavData.title}, 内部:位置${childPagerState.currentPage}, 名称${currNavData.tags[childPagerState.currentPage].tag_name}")
         }
     }
 }
