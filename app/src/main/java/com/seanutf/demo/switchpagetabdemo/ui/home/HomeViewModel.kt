@@ -22,21 +22,16 @@ class HomeViewModel : ViewModel() {
     private val _topNavList = MutableStateFlow(emptyList<UiTopNav>())
     val topNavList: StateFlow<List<UiTopNav>> = _topNavList
 
-    //for home page's select child page
-    private val _topPageSelectIndex = MutableStateFlow(currentPageIndex)
-    val topPageSelectIndex: StateFlow<Int> = _topPageSelectIndex
-
-    //for recommend page's and other page's select child page
-    private val _childPageSelectIndex = MutableStateFlow(0)
-    val childPageSelectIndex: StateFlow<Int> = _childPageSelectIndex
-
     private lateinit var uiHomePageTabList: List<UiTopNav>
 
     init {
         transform()
-        setSelectPageAndTab()
+        notifyUiTabList()
     }
 
+    /**
+     * 将原始api数据转换成UI展示数据
+     * */
     private fun transform() {
         uiHomePageTabList = originalHomeConfig.MainPage.TopNavs.map {
             UiTopNav(
@@ -48,7 +43,10 @@ class HomeViewModel : ViewModel() {
         _topNavList.value = uiHomePageTabList
     }
 
-    private fun setSelectPageAndTab() {
+    /**
+     * 更新Ui展示的Tab 列表
+     * */
+    private fun notifyUiTabList() {
         if (currentPageIndex == 0) {
             val firstPageTabList =
                 uiHomePageTabList.mapIndexed { index, nav ->
@@ -59,81 +57,99 @@ class HomeViewModel : ViewModel() {
         } else {
             val otherPageTabList =
                 uiHomePageTabList[currentPageIndex].tags.mapIndexed { index, tag ->
-                    val select = index == getPageCurrSelectTabIndex(currentPageIndex)
+                    val select = index == getPageSelectTabIndex(currentPageIndex)
                     UiTabList(tag.tag_name, select)
                 }
             _tabList.value = otherPageTabList
         }
     }
 
-    fun updateSelectIndex(tabIndex: Int) {
+    /**
+     * 点击Tab
+     * */
+    fun onChildTabClick(tabIndex: Int) {
         updateSelectTab(tabIndex)
-        setSelectPageAndTab()
-        _topPageSelectIndex.value = currentPageIndex
-        _childPageSelectIndex.value = getPageCurrSelectTabIndex(currentPageIndex)
+        notifyUiTabList()
     }
 
-    private fun updateSelectTab(tabIndex: Int): Boolean {
-        return if (currentPageIndex == 0) {
+    /**
+     * 更新选中的Tab
+     * */
+    private fun updateSelectTab(tabIndex: Int) {
+        if (currentPageIndex == 0) {
             //recommend page
-            if (getPageCurrSelectTabIndex(0) != tabIndex) {
+            if (getPageSelectTabIndex(0) != tabIndex) {
                 //update page index
                 currentPageIndex = tabIndex
                 //reset tab index to zero
-                updateCurrPageSelectTabIndex(0)
-                true
-            } else {
-                false
+                updateSpecificPageSelectTabIndex(tabIndex, 0)
             }
         } else {
             //other page
             updateCurrPageSelectTabIndex(tabIndex)
-            false
         }
     }
 
+    /**
+     * 获取每个子页面的Tab数量
+     * */
     fun getChildPagerSizeOfTopTab(currTopTabIndex: Int): Int {
         return uiHomePageTabList[currTopTabIndex].tags.size
     }
 
-    private fun getPageCurrSelectTabIndex(pageIndex: Int): Int {
+    /**
+     * 获取每个子页面中当前选中Tab的Index
+     * */
+    private fun getPageSelectTabIndex(pageIndex: Int): Int {
         return uiHomePageTabList[pageIndex].selectIndex
     }
 
+    /**
+     * 更新当前页面中选中Tab的Index
+     * */
     private fun updateCurrPageSelectTabIndex(tabIndex: Int) {
         updateSpecificPageSelectTabIndex(currentPageIndex, tabIndex)
     }
 
+    /**
+     * 更新指定页面中选中Tab的Index
+     * */
     private fun updateSpecificPageSelectTabIndex(pageIndex: Int, tabIndex: Int) {
         uiHomePageTabList[pageIndex].selectIndex = tabIndex
     }
 
-    fun updateSelectTabUi(topPagerState: PagerState, childPagerState: PagerState) {
+    /**
+     * 通知Ui中的Page和child Page页面更新
+     * */
+    fun notifyUiChangeSelectPage(topPagerState: PagerState, childPagerState: PagerState) {
         viewModelScope.launch {
             topPagerState.scrollToPage(currentPageIndex)
-            childPagerState.scrollToPage(getPageCurrSelectTabIndex(currentPageIndex))
+            childPagerState.scrollToPage(getPageSelectTabIndex(currentPageIndex))
         }
     }
 
+    /**
+     * 获取当前页面的页面数据
+     * */
     fun getCurrentPageData(currentPage: Int): UiTopNav {
         return uiHomePageTabList[currentPage]
     }
 
-    fun onScrollToPage(pageIndex: Int) {
-        //val thisTimeSelectTabIndex = getPageCurrSelectTabIndex(pageIndex)
+    /**
+     * 滑动页面处理
+     * */
+    fun onScrollToPage(pageIndex: Int, tabIndex: Int) {
         val lastTimePageIndex = currentPageIndex
-        //val lastTimeSelectTabIndex = getPageCurrSelectTabIndex(currentPageIndex)
-
         if (pageIndex < lastTimePageIndex) {
             val lastIndex = uiHomePageTabList[pageIndex].tags.lastIndex
             updateSpecificPageSelectTabIndex(pageIndex, lastIndex)
-        } else {
+        } else if (pageIndex > lastTimePageIndex) {
             updateSpecificPageSelectTabIndex(pageIndex, 0)
+        } else {
+            updateSpecificPageSelectTabIndex(pageIndex, tabIndex)
         }
         currentPageIndex = pageIndex
-        setSelectPageAndTab()
-        _topPageSelectIndex.value = currentPageIndex
-        _childPageSelectIndex.value = getPageCurrSelectTabIndex(currentPageIndex)
+        notifyUiTabList()
     }
 }
 

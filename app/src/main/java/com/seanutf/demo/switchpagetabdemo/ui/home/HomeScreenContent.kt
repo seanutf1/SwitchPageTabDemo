@@ -18,7 +18,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreenContent(
@@ -29,8 +28,6 @@ fun HomeScreenContent(
         modifier = modifier.fillMaxSize()
     ) {
         val topNavList by viewModel.topNavList.collectAsState()
-        val topPageSelectIndex by viewModel.topPageSelectIndex.collectAsState()
-        val childPageSelectIndex by viewModel.childPageSelectIndex.collectAsState()
 
         val topPagerState = rememberPagerState(pageCount = { topNavList.size })
         val childPagerState = rememberPagerState(
@@ -49,24 +46,16 @@ fun HomeScreenContent(
             modifier = Modifier.align(Alignment.TopCenter),
             viewModel = viewModel,
             onChildTabClick = { index ->
-                viewModel.updateSelectIndex(index)
-                viewModel.updateSelectTabUi(topPagerState, childPagerState)
+                viewModel.onChildTabClick(index)
+                viewModel.notifyUiChangeSelectPage(topPagerState, childPagerState)
             }
         )
 
         LaunchedEffect(topPagerState, childPagerState) {
-            scope.launch {
-                topPagerState.scrollToPage(topPageSelectIndex)
-                childPagerState.scrollToPage(childPageSelectIndex)
-            }
 
-            snapshotFlow { topPagerState.currentPage }.collect { page ->
-                viewModel.onScrollToPage(page)
-                viewModel.updateSelectTabUi(topPagerState, childPagerState)
-            }
-
-            snapshotFlow { childPagerState.currentPage }.collect { page ->
-                viewModel.updateSelectIndex(page)
+            snapshotFlow { topPagerState.currentPage to childPagerState.currentPage }.collect { page ->
+                viewModel.onScrollToPage(page.first, page.second)
+                viewModel.notifyUiChangeSelectPage(topPagerState, childPagerState)
             }
         }
     }
